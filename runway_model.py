@@ -37,7 +37,7 @@
 # Import the Runway SDK. Please install it first with
 # `pip install runway-python`.
 import runway
-from runway.data_types import category, image
+from runway.data_types import category, image, number
 import numpy as np
 import tensorflow as tf
 # from example_model import ExampleModel

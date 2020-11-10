@@ -75,7 +75,9 @@ def setup(opts):
 
 input_options = {
   'layer': category(choices=["conv2d0 (max:64)", "maxpool0 (max:64)", "conv2d1 (max:64)", "conv2d2 (max:192)", "maxpool1 (max:192)", "mixed3a (max:256)", "mixed3b (max:480)", "maxpool4 (max:480)", "mixed4a (max:508)", "mixed4b (max:512)", "mixed4c (max:512)", "mixed4d (max:528)", "mixed4e (max:832)", "maxpool10 (max:832)", "mixed5a (max:832)", "mixed5b (max:1024)"], default="mixed5b (max:1024)", description='choose layer of network to visualize'),
-  'neuron': number(default=0, min=0, max=1023, step=1, description='Neuron ID')
+  'neuron': number(default=0, min=0, max=1023, step=1, description='Neuron ID'),
+  'size': number(default=128, min=128, max=1024, step=128, description='Image Size'),
+  'transforms': boolean(default=False, description='Vary size of visualization')
 }
 
 @runway.command(name='generate',
@@ -84,11 +86,40 @@ input_options = {
                 description='Use Lucid to visualize the layers and neurons of a specific ML network.')
 def generate(model, args):
     print('[GENERATE] Ran with layer {} and neuron {}'.format(args['layer'], args['neuron']))
-    # Generate a PIL or Numpy image based on the input caption, and return it
 
     layer_id = args['layer'].split(' ')[0]
     layer_neuron = '{}:{}'.format(layer_id, args['neuron'])
-    img = render.render_vis(model, layer_neuron)[-1][0]
+
+    s = int(args['size'])
+
+    # https://github.com/tensorflow/lucid/issues/148
+    with tf.Graph().as_default() as graph, tf.Session() as sess:
+  
+        t_img = param.image(s)
+        crop_W = s/2
+        t_offset = tf.random.uniform((2,), 0, s - crop_W, dtype="int32")
+        t_img_crop = t_img[:, t_offset[0]:t_offset[0]+crop_W, t_offset[1]:t_offset[1]+crop_W]
+        
+        
+        if(args['transforms']):
+            transforms=[transform.jitter(2), 
+                transform.random_scale([0.3 + n/10. for n in range(20)]),
+                transform.random_rotate(range(-10,11)),
+                transform.jitter(2)]
+      
+            T = render.make_vis_T(model, layer_neuron, t_img_crop, transforms=transforms)
+        else:
+            T = render.make_vis_T(model, layer_neuron, t_img_crop)
+
+        tf.initialize_all_variables().run()
+
+        for i in range(1024):
+            T("vis_op").run()
+          
+        img = t_img.eval()[0]
+
+    # https://github.com/tensorflow/lucid/issues/108
+    # img = render.render_vis(model, layer_neuron)[-1][0]
     img = Image.fromarray(np.uint8(img*255))
     return {
         'image': img
@@ -98,10 +129,3 @@ if __name__ == '__main__':
     # run the model server using the default network interface and ports,
     # displayed here for convenience
     runway.run(host='0.0.0.0', port=8000)
-
-## Now that the model is running, open a new terminal and give it a command to
-## generate an image. It will respond with a base64 encoded URI
-# curl \
-#   -H "content-type: application/json" \
-#   -d '{ "caption": "red" }' \
-#   localhost:8000/generate

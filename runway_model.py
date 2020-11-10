@@ -37,7 +37,7 @@
 # Import the Runway SDK. Please install it first with
 # `pip install runway-python`.
 import runway
-from runway.data_types import category, image, number
+from runway.data_types import category, image, number, boolean
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -45,7 +45,9 @@ from PIL import Image
 
 import lucid.modelzoo.vision_models as models
 from lucid.misc.io import show
+import lucid.optvis.param as param
 import lucid.optvis.render as render
+import lucid.optvis.transform as transform
 
 # Setup the model, initialize weights, set the configs of the model, etc.
 # Every model will have a different set of configurations and requirements.

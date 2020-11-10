@@ -78,7 +78,7 @@ input_options = {
 }
 
 @runway.command(name='generate',
-                inputs={ input_options },
+                inputs=input_options,
                 outputs={ 'image': image() },
                 description='Use Lucid to visualize the layers and neurons of a specific ML network.')
 def generate(model, args):

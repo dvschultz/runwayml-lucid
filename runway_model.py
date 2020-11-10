@@ -40,6 +40,7 @@ import runway
 from runway.data_types import category, image, number
 import numpy as np
 import tensorflow as tf
+from PIL import Image
 # from example_model import ExampleModel
 
 import lucid.modelzoo.vision_models as models
@@ -87,7 +88,8 @@ def generate(model, args):
 
     layer_id = args['layer'].split(' ')[0]
     layer_neuron = '{}:{}'.format(layer_id, args['neuron'])
-    img = render.render_vis(model, layer_neuron)
+    img = render.render_vis(model, layer_neuron)[-1][0]
+    img = Image.fromarray(np.uint8(img*255))
     return {
         'image': img
     }

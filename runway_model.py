@@ -55,7 +55,7 @@ import lucid.optvis.transform as transform
 # supported configs. The setup function should return the model ready to be
 # used.
 @runway.setup()
-def setup(opts):
+def setup():
     msg = '[SETUP] Ran with options: network = {}'
     
     model = models.InceptionV1()
@@ -72,7 +72,7 @@ input_options = {
   'size': number(default=128, min=128, max=1024, step=128, description='Image Size'),
   'transforms': boolean(default=False, description='Vary size of visualization'),
   'transform_min': number(default=0.3, min=0.0, max=1.0, step=.1, description='Minimum scaling amount'),
-  'transform_max': number(default=0.5, min=0.0, max=1.0, step=.1, description='Maximum scaling amount'),
+  'transform_max': number(default=0.5, min=0.0, max=1.0, step=.1, description='Maximum scaling amount')
 }
 
 @runway.command(name='generate',
@@ -86,6 +86,9 @@ def generate(model, args):
     layer_neuron = '{}:{}'.format(layer_id, args['neuron'])
 
     s = int(args['size'])
+    min_scale = args['transform_min']
+    max_scale = args['transform_max']
+    scale_offset = (max_scale - min_scale) * 10
 
     # https://github.com/tensorflow/lucid/issues/148
     with tf.Graph().as_default() as graph, tf.Session() as sess:
@@ -98,7 +101,7 @@ def generate(model, args):
         
         if(args['transforms']):
             transforms=[transform.jitter(2), 
-                transform.random_scale([0.3 + n/10. for n in range(20)]),
+                transform.random_scale([min_scale + n/10. for n in range(scale_offset)]),
                 transform.random_rotate(range(-10,11)),
                 transform.jitter(2)]
       

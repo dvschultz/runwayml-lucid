@@ -54,9 +54,9 @@ import lucid.optvis.transform as transform
 # Check https://docs.runwayapp.ai/#/python-sdk to see a complete list of
 # supported configs. The setup function should return the model ready to be
 # used.
+opts = {}
 @runway.setup()
-def setup():
-    msg = '[SETUP] Ran with options: network = {}'
+def setup(opts):
     
     model = models.InceptionV1()
     model.load_graphdef()

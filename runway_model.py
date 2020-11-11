@@ -54,20 +54,11 @@ import lucid.optvis.transform as transform
 # Check https://docs.runwayapp.ai/#/python-sdk to see a complete list of
 # supported configs. The setup function should return the model ready to be
 # used.
-setup_options = {
-    "network": category(choices=["InceptionV1","VGG19_caffe"], default="InceptionV1")
-}
-@runway.setup(options=setup_options)
+@runway.setup()
 def setup(opts):
     msg = '[SETUP] Ran with options: network = {}'
-    print(msg.format(opts['network']))
-    if(opts['network'] == "InceptionV1"):
-        model = models.InceptionV1()
-    elif (opts['network'] == "VGG19_caffe"):
-        model = models.VGG19_caffe()
-    else:
-        model = models.InceptionV1()
-
+    
+    model = models.InceptionV1()
     model.load_graphdef()
     return model
 
@@ -79,7 +70,9 @@ input_options = {
   'layer': category(choices=["conv2d0 (max:64)", "maxpool0 (max:64)", "conv2d1 (max:64)", "conv2d2 (max:192)", "maxpool1 (max:192)", "mixed3a (max:256)", "mixed3b (max:480)", "maxpool4 (max:480)", "mixed4a (max:508)", "mixed4b (max:512)", "mixed4c (max:512)", "mixed4d (max:528)", "mixed4e (max:832)", "maxpool10 (max:832)", "mixed5a (max:832)", "mixed5b (max:1024)"], default="mixed5b (max:1024)", description='choose layer of network to visualize'),
   'neuron': number(default=0, min=0, max=1023, step=1, description='Neuron ID'),
   'size': number(default=128, min=128, max=1024, step=128, description='Image Size'),
-  'transforms': boolean(default=False, description='Vary size of visualization')
+  'transforms': boolean(default=False, description='Vary size of visualization'),
+  'transform_min': number(default=0.3, min=0.0, max=1.0, step=.1, description='Minimum scaling amount'),
+  'transform_max': number(default=0.5, min=0.0, max=1.0, step=.1, description='Maximum scaling amount'),
 }
 
 @runway.command(name='generate',
@@ -98,7 +91,7 @@ def generate(model, args):
     with tf.Graph().as_default() as graph, tf.Session() as sess:
   
         t_img = param.image(s)
-        crop_W = s/2
+        crop_W = int(s/2)
         t_offset = tf.random.uniform((2,), 0, s - crop_W, dtype="int32")
         t_img_crop = t_img[:, t_offset[0]:t_offset[0]+crop_W, t_offset[1]:t_offset[1]+crop_W]
         
